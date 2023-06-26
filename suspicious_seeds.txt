@@ -1,0 +1,9 @@
+#   GETS STUCK SOMEWHERE
+45163
+47939
+
+#   Mad mouse walks next to the cheese
+84451
+
+#   Starts next to a cheese, ignores it
+21157926
