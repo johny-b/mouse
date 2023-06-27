@@ -1,0 +1,22 @@
+go right
+	73 
+	110 (lower effect)
+	96 (only when cheese in weird position)
+go left
+	38 (sort of left)
+	80 (eg on seed 47103015, but not on other seeds)
+"go to the cheese"
+	121
+	112
+
+??
+	17
+	123
+
+"go up"
+	45 ("go to cheese" if cheese top right corner, "go up" otherwise)
+	98
+	10 (only with cheese in weird position)
+
+57131963
+2800840
