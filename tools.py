@@ -14,8 +14,16 @@ def get_seed(maze_size: int) -> int:
         if maze.get_inner_grid_from_seed(seed=seed).shape[0] == maze_size:
             return seed
 
-def get_vf(seed, policy):
+def set_cheese(venv, cheese):
+    grid = maze.state_from_venv(venv).inner_grid()
+    grid[grid == 2] = 100
+    grid[cheese] = 2
+    return maze.venv_from_grid(grid)
+
+def get_vf(seed, policy, cheese=None):
     venv = maze.create_venv(num=1, start_level=seed, num_levels=1)
+    if cheese is not None:
+        venv = set_cheese(venv, cheese)
     return visualization.vector_field(venv, policy)        
 
 def get_squares_by_type(maze_size: int) -> int:
@@ -26,9 +34,13 @@ def get_squares_by_type(maze_size: int) -> int:
     
     return even_odd_squares, odd_even_squares, even_even_squares
 
-def get_activations_sum(hook, seed, layer_name, positions):
+def get_activations_sum(hook, seed, layer_name, positions=None, cheese = None):
     """Returns mean activation absolute value per channel, for given layer_name and mouse positions"""
     venv = maze.create_venv(num=1, start_level=seed, num_levels=1)
+    
+    if cheese is not None:
+        venv = set_cheese(venv, cheese)
+        
     venv_all, (legal_mouse_positions, _) = maze.venv_with_all_mouse_positions(venv)
     with t.no_grad():
         hook.run_with_input(venv_all.reset().astype('float32'))
@@ -39,7 +51,7 @@ def get_activations_sum(hook, seed, layer_name, positions):
 
     data = []
     for mouse_pos, activation in zip(legal_mouse_positions, activations):
-        if mouse_pos in positions:
+        if positions is None or mouse_pos in positions:
             data.append(activation)
             
     data = t.stack(data)
