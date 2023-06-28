@@ -8,7 +8,8 @@ import torch as t
 from procgen_tools.imports import load_model
 from procgen_tools import maze, visualization
 
-from tools import maze_str_to_grid, PolicyWithRelu3Mod
+from tools import maze_str_to_grid, PolicyWithRelu3Mod, get_seed
+from procgen_tools.rollout_utils import rollout_video_clip, get_predict
 # %%
 
 policy, hook = load_model()
@@ -156,4 +157,47 @@ vf_2_modified = visualization.vector_field(venv_2, modified_policy)
 visualization.plot_vfs(vf_1, vf_1_modified)
 visualization.plot_vfs(vf_2, vf_2_modified)
 
+# %%
+def get_seed_with_decision_square(size: int) -> int:
+    assert size % 2, "size must be an odd number"
+
+    while True:
+        seed = np.random.randint(100000000)
+        while maze.get_inner_grid_from_seed(seed=seed).shape[0] != size:
+            seed = np.random.randint(100000000)
+
+        venv = maze.create_venv(num=1, start_level=seed, num_levels=1)
+        state_bytes = venv.env.callmethod("get_state")[0]
+        
+        if maze.maze_has_decision_square(state_bytes):
+            return seed
+
+def rollout(policy, seed: int, num_steps: int = 256) -> bool:
+    venv = maze.create_venv(num = 1, start_level=seed, num_levels=1)
+    
+    obs = venv.reset()
+    for i in range(num_steps):
+        obs = t.tensor(obs, dtype=t.float32)
+        with t.no_grad():
+            categorical, value = policy(obs)
+        
+        action = categorical.sample().numpy()
+        # action = categorical.logits.argmax().unsqueeze(0).numpy()
+        obs, rewards, dones, infos = venv.step(action)
+        
+        if dones[0]:
+            return True
+    return False
+
+for i in range(100):
+    seed = get_seed_with_decision_square(13)
+    result_orig = rollout(policy, seed)
+    result_modified = rollout(modified_policy, seed)
+    print(seed, result_orig, result_modified)
+
+# %%
+# predict = get_predict(policy)
+# x = rollout_video_clip(predict, seed)
+
+# x[1].write_videofile('/root/t1.mp4')
 # %%
