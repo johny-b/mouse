@@ -94,8 +94,41 @@ class PolicyWithRelu3Mod(t.nn.Module):
         x = embedder.relufc(x)
         return x
     
-    def _ablate_relu3(self, x):
-        x[:, self.ablated_channels] = 0
+
+class PolicyWithFCMod(t.nn.Module):
+    def __init__(self, orig_policy: t.nn.Module, mod_func: Callable[[t.Tensor], Optional[t.Tensor]]):
+        super().__init__()
+        self.orig_policy = orig_policy
+        self.mod_func = mod_func
+        
+    def forward(self, x):
+        hidden = self.hidden(x)
+        
+        #   NOTE: everything below is just copied from procgen_tools.models.CategoricalPolicy
+        from torch.distributions import Categorical
+        import torch.nn.functional as F
+        
+        logits = self.orig_policy.fc_policy(hidden)
+        log_probs = F.log_softmax(logits, dim=1)                                
+        p = Categorical(logits=log_probs)                                       
+        v = self.orig_policy.fc_value(hidden).reshape(-1)                                   
+        return p, v
+        
+    def hidden(self, x):
+        embedder = self.orig_policy.embedder
+        x = embedder.block1(x)
+        x = embedder.block2(x)
+        x = embedder.block3(x)
+        x = embedder.relu3(x)
+        
+        x = embedder.flatten(x)
+        x = embedder.fc(x)
+        
+        modified_x = self.mod_func(x)
+        #   If nothing was returned, we assume mod was in place
+        x = modified_x if modified_x is not None else x
+        
+        x = embedder.relufc(x)
         return x
 
 def assert_same_model_wo_ablations(policy):        
@@ -108,4 +141,25 @@ def assert_same_model_wo_ablations(policy):
         categorical_1, value_1 = policy_with_ablations(obs)
     assert t.allclose(categorical_0.logits, categorical_1.logits)
     assert t.allclose(value_0, value_1)
-# %%
+
+def maze_str_to_grid(maze_str):
+    custom_maze_arr = []
+    for line in maze_str.split("\n"):
+        line = line.strip()
+        if not line:
+            continue
+        line_arr = []
+        for val in line:
+            if val == "0":
+                line_arr.append(100)
+            elif val == "1":
+                line_arr.append(51)
+            elif val == "M":
+                line_arr.append(25)
+            elif val == "C":
+                line_arr.append(2)
+            else:
+                raise ValueError(f"Unexpected value {val}")
+        custom_maze_arr.append(line_arr)
+        
+    return np.array(custom_maze_arr)
