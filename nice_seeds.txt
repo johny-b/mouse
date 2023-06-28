@@ -1,0 +1,2 @@
+37982576 <-- seems to work better with "multiply by 5" and stupid channel selection
+46670244 <-- works well with mulyiply by 5
