@@ -55,9 +55,9 @@ def get_cheese_dir_channels(venvs):
 channels = get_cheese_dir_channels([venv_1, venv_2])
 
 # %%
-TOP_CHANNELS = 100
+TOP_CHANNELS = 16
 def modify_relu3(x):
-    cheese_channels = channels.topk(TOP_CHANNELS, largest=False).indices   
+    cheese_channels = channels.topk(TOP_CHANNELS).indices   
     x[:, cheese_channels] *= 0
     
 modified_policy = PolicyWithRelu3Mod(policy, modify_relu3)
