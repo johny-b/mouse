@@ -54,30 +54,52 @@ CUSTOM_MAZE_STR_4 = """
     1111111111110
     0000000000000
     1111111111110
-    0000000000000
-
-    
+    0000000000000    
+"""
+CUSTOM_MAZE_STR_5 = """
+    000000000
+    111111110
+    01C000010
+    010111010
+    010101010
+    010111010
+    010000M00
+    011111011
+    000000000
 """
 
-maze_setups = [
+
+
+no_rot_maze_setups = [
     (CUSTOM_MAZE_STR_2, (3, 2), (2, 3)),
     (CUSTOM_MAZE_STR_3, (7, 2), (6, 3)),
     (CUSTOM_MAZE_STR_4, (3, 2), (2, 3)),
+    (CUSTOM_MAZE_STR_5, (3, 2), (2, 3)),
 ]
-ix = 0
+maze_setups = []
+for i in range(4):
+    maze_setups += [row + (i,) for row in no_rot_maze_setups]
+    
+ix = 15
 
-maze_str, first_grid_wall, second_grid_wall = maze_setups[ix]
+maze_str, first_grid_wall, second_grid_wall, rot_cnt = maze_setups[ix]
 
 base_grid = maze_str_to_grid(maze_str)
 grid_1 = base_grid.copy()
 grid_1[first_grid_wall] = 51
-venv_1 = maze.venv_from_grid(grid_1)
-# visualization.visualize_venv(venv_1, render_padding=False)
 
 grid_2 = base_grid.copy()
 grid_2[second_grid_wall] = 51
+
+for i in range(rot_cnt):
+    grid_1 = np.rot90(grid_1)
+    grid_2 = np.rot90(grid_2)
+
+venv_1 = maze.venv_from_grid(grid_1)
 venv_2 = maze.venv_from_grid(grid_2)
-# visualization.visualize_venv(venv_2, render_padding=False)
+
+visualization.visualize_venv(venv_1, render_padding=False)
+visualization.visualize_venv(venv_2, render_padding=False)
 
 # %%
 vf_1 = visualization.vector_field(venv_1, policy)
@@ -106,24 +128,23 @@ print(channels.topk(10))
 # TEST 1 - channels selected for this particular maze
 def get_mod_func(channels):
     def modify_relu3(x):
-        x[:, channels] *= 10
+        x[:, channels] *= 0
     return modify_relu3
 
-TOP_CHANNELS = 16    
-mod_func = get_mod_func(channels.topk(TOP_CHANNELS).indices)
-modified_policy = PolicyWithRelu3Mod(policy, mod_func)
+# TOP_CHANNELS = 16    
+# mod_func = get_mod_func(channels.topk(TOP_CHANNELS).indices)
+# modified_policy = PolicyWithRelu3Mod(policy, mod_func)
 
-vf_1_modified = visualization.vector_field(venv_1, modified_policy)
-vf_2_modified = visualization.vector_field(venv_2, modified_policy)
+# vf_1_modified = visualization.vector_field(venv_1, modified_policy)
+# vf_2_modified = visualization.vector_field(venv_2, modified_policy)
 
-visualization.plot_vfs(vf_1, vf_1_modified)
+# visualization.plot_vfs(vf_1, vf_1_modified)
 # visualization.plot_vfs(vf_2, vf_2_modified)
-
 
 
 # %%
 # TEST 2 - use predefined channels
-#   Selected from examples 2-4. Expected to works on them.
+# Selected from examples 2-4. Expected to works on them.
 example_2_4_channels = [6, 7, 14, 17, 21, 30, 35, 43, 53, 71, 73, 80, 96, 101, 110, 112, 121, 123, 124]
 
 mod_func = get_mod_func(example_2_4_channels)
@@ -133,6 +154,6 @@ vf_1_modified = visualization.vector_field(venv_1, modified_policy)
 vf_2_modified = visualization.vector_field(venv_2, modified_policy)
 
 visualization.plot_vfs(vf_1, vf_1_modified)
-# visualization.plot_vfs(vf_2, vf_2_modified)
+visualization.plot_vfs(vf_2, vf_2_modified)
 
 # %%
