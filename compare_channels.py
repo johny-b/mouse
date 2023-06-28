@@ -5,13 +5,39 @@ import torch as t
 from procgen_tools.imports import load_model
 from procgen_tools import maze, visualization
 
-from tools import get_seed, set_cheese, get_squares_by_type, get_activations_sum, PolicyWithRelu3Mod, get_vf
+from tools import maze_str_to_grid, PolicyWithRelu3Mod
 # %%
 
 policy, hook = load_model()
 
 # %%
-MAZE_SIZE = 11
+CUSTOM_MAZE_STR_2 = """
+    000000000
+    111111110
+    01C001000
+    010101110
+    0100M0000
+    011101110
+    010101000
+    010001111
+    000100000
+"""
+
+base_grid = maze_str_to_grid(CUSTOM_MAZE_STR_2)
+grid_1 = base_grid.copy()
+grid_1[3, 2] = 51
+venv_1 = maze.venv_from_grid(grid_1)
+visualization.visualize_venv(venv_1, render_padding=False)
+
+grid_2 = base_grid.copy()
+grid_2[2, 3] = 51
+venv_2 = maze.venv_from_grid(grid_2)
+visualization.visualize_venv(venv_2, render_padding=False)
+
+vf_1 = visualization.vector_field(venv_1, policy)
+vf_2 = visualization.vector_field(venv_2, policy)
+
+# %%
 def get_activations(venvs):
     activations = []
     for venv in venvs:
@@ -21,57 +47,27 @@ def get_activations(venvs):
         
     return t.stack(activations)
 
-stds = []
-means = []
-for i in range(50):
-    print(i)
-    seed = get_seed(MAZE_SIZE)
-    base_venv = maze.create_venv(num=1, start_level=seed, num_levels=1)
-
-    venvs = []
-    for cheese_x in range(2, MAZE_SIZE - 1, 2):
-        for cheese_y in range(2, MAZE_SIZE - 1, 2):
-            venvs.append(set_cheese(base_venv, (cheese_x, cheese_y)))
-        
+def get_cheese_dir_channels(venvs):    
     act = get_activations(venvs)
-    means.append(act.mean(dim=0))
-    
-    act_mean = act.mean(dim=(-1, -2))
+    diff = (act[0] - act[1]).square().sum(dim=(1,2)).sqrt()
+    return diff
 
-    act = act / (act_mean.reshape(len(venvs), 128, 1, 1) + 0.00000000001)
-    std = act.std(dim=0, correction=False)
-    channel_std = std.mean(dim=(-1, -2))
-    stds.append(channel_std)
-
-
-stds = t.stack(stds)
-means = t.stack(means)
-means = means.mean(dim=0)
+channels = get_cheese_dir_channels([venv_1, venv_2])
 
 # %%
-
-seed = get_seed(MAZE_SIZE)
-print("SEED", seed)
-CHEESE = (2, 8)
-TOP_CHANNELS = 32
-
-
-def reinforce_cheese(x):
-    cheese_channels = stds.sum(dim=0).topk(TOP_CHANNELS).indices
-    top_right_channels = stds.sum(dim=0).topk(TOP_CHANNELS, largest=False).indices
-
-    old_sum = x.sum()
-    x[:, top_right_channels] = 0
-    x[:, cheese_channels] *= 4
-    x *= (old_sum / x.sum())
+TOP_CHANNELS = 100
+def modify_relu3(x):
+    cheese_channels = channels.topk(TOP_CHANNELS, largest=False).indices   
+    x[:, cheese_channels] *= 0
     
-reinforce_cheese_policy = PolicyWithRelu3Mod(policy, reinforce_cheese)
+modified_policy = PolicyWithRelu3Mod(policy, modify_relu3)
 
-#   Calculate vector fields and display them
-vf_original = get_vf(seed, policy, cheese=CHEESE)
-vf_reinforce_cheese = get_vf(seed, reinforce_cheese_policy, cheese=CHEESE)
+vf_1_modified = visualization.vector_field(venv_1, modified_policy)
+vf_2_modified = visualization.vector_field(venv_2, modified_policy)
 
-# visualization.plot_vfs(vf_original, vf_ablate_cheese)
-visualization.plot_vfs(vf_original, vf_reinforce_cheese)
+visualization.plot_vfs(vf_1, vf_1_modified)
+visualization.plot_vfs(vf_2, vf_2_modified)
+
+
 
 # %%
