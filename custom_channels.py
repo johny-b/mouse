@@ -70,6 +70,13 @@ CORNER_MAZE = """
 """
 
 def get_venvs(name):
+    rot_label = [
+        "(down, left)",
+        "(left, up)",
+        "(up, right)",
+        "(right, down)",        
+    ]
+
     if name == 'cheese':
         no_rot_maze_setups = [
             (CUSTOM_MAZE_STR_2, (3, 2), (2, 3)),
@@ -89,6 +96,7 @@ def get_venvs(name):
         raise ValueError(f"wtf is {name}")
 
     venvs = []
+    labels = []
     for ix in range(len(maze_setups)):
         maze_str, first_grid_wall, second_grid_wall, rot_cnt = maze_setups[ix]
 
@@ -104,5 +112,7 @@ def get_venvs(name):
             grid_2 = np.rot90(grid_2)
 
         venvs.append((maze.venv_from_grid(grid_1), maze.venv_from_grid(grid_2)))
+
+        labels.append(f"Maze {ix % 4} rotated {90 * rot_cnt} - {rot_label[rot_cnt]}")
     
-    return venvs
+    return venvs, labels
