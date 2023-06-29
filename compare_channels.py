@@ -1,110 +1,24 @@
 # %%
-import os
-os.environ["CUDA_AVAILABLE_DEVICES"] = ""
-
 import numpy as np
 import torch as t
 
 from procgen_tools.imports import load_model
-from procgen_tools import maze, visualization
+from procgen_tools import maze, visualization, models
 
 from tools import maze_str_to_grid, PolicyWithRelu3Mod, get_seed_with_decision_square, rollout, compare_policies
 from procgen_tools.rollout_utils import rollout_video_clip, get_predict
+from custom_channels import get_venvs
 # %%
 
 policy, hook = load_model()
 
 # %%
-
-CUSTOM_MAZE_STR_2 = """
-    000000000
-    111111110
-    01C001000
-    010101110
-    0100M0000
-    011101110
-    010101000
-    010001111
-    000100000
-"""
-CUSTOM_MAZE_STR_3 = """
-    0000000000000
-    1111111111110
-    0000000000000
-    1111111111110
-    0000000000000
-    1111111111110
-    01C0010000000
-    0101011111110
-    0100M00000000
-    0111011111110
-    0101010000000
-    0100011111111
-    0001000000000
-"""
-CUSTOM_MAZE_STR_4 = """
-    0000000000000
-    1111111111110
-    01C0010000000
-    0101011111110
-    0100M00000000
-    0111011111110
-    0101010000000
-    0100011111111
-    0001000000000
-    1111111111110
-    0000000000000
-    1111111111110
-    0000000000000    
-"""
-CUSTOM_MAZE_STR_5 = """
-    000000000
-    111111110
-    01C000010
-    010111010
-    010101010
-    010111010
-    010000M00
-    011111011
-    000000000
-"""
-
-
-
-no_rot_maze_setups = [
-    (CUSTOM_MAZE_STR_2, (3, 2), (2, 3)),
-    (CUSTOM_MAZE_STR_3, (7, 2), (6, 3)),
-    (CUSTOM_MAZE_STR_4, (3, 2), (2, 3)),
-    (CUSTOM_MAZE_STR_5, (3, 2), (2, 3)),
-]
-maze_setups = []
-for i in range(4):
-    maze_setups += [row + (i,) for row in no_rot_maze_setups]
-    
-ix = 15
-
-maze_str, first_grid_wall, second_grid_wall, rot_cnt = maze_setups[ix]
-
-base_grid = maze_str_to_grid(maze_str)
-grid_1 = base_grid.copy()
-grid_1[first_grid_wall] = 51
-
-grid_2 = base_grid.copy()
-grid_2[second_grid_wall] = 51
-
-for i in range(rot_cnt):
-    grid_1 = np.rot90(grid_1)
-    grid_2 = np.rot90(grid_2)
-
-venv_1 = maze.venv_from_grid(grid_1)
-venv_2 = maze.venv_from_grid(grid_2)
-
-visualization.visualize_venv(venv_1, render_padding=False)
-visualization.visualize_venv(venv_2, render_padding=False)
-
-# %%
-vf_1 = visualization.vector_field(venv_1, policy)
-vf_2 = visualization.vector_field(venv_2, policy)
+venvs = get_venvs('cheese')
+for i, (venv_1, venv_2) in enumerate(venvs):
+    if not i % 4:
+        print(i)
+        visualization.visualize_venv(venv_1, render_padding=False)
+        visualization.visualize_venv(venv_2, render_padding=False)
 
 # %%
 def get_activations(venvs):
@@ -116,26 +30,62 @@ def get_activations(venvs):
         
     return t.stack(activations)
 
+def plot_channel(channel):
+    from matplotlib import pyplot as plt
+    c = channel.unsqueeze(2)
+    plt.imshow(c)
+    plt.show()
+    
+
 def get_cheese_dir_channels(venvs):    
     act = get_activations(venvs)
+    #
     diff = (act[0] - act[1]).square().sum(dim=(1,2)).sqrt()
+    print("DIFF", diff[123])
+    
+    # plot_channel(y)
+    # print(x)
+    # print(y)
     return diff
 
-channels = get_cheese_dir_channels([venv_1, venv_2])
+for channel in [21]:  # , 21, 35, 73, 17, 7, 112, 80, 71, 123]:
+    channel_data_1 = []
+    channel_data_2 = []
+    for rot in range(4):
+        rot_data_1 = []
+        rot_data_2 = []
+        for m in range(4):
+            i = 4 * rot + m
+            venv_1, venv_2 = venvs[i]
+            act = get_activations([venv_1, venv_2])
+            diff = (act[0] - act[1]).square().sum(dim=(1,2)).sqrt()
+            rot_data_1.append(act[0][channel].sum().round().item())
+            rot_data_2.append(act[1][channel].sum().round().item())
+        print(channel, rot, rot_data_1)
+        print(channel, rot, rot_data_2)
+        channel_data_1.append(round(sum(rot_data_1) / 4))
+        channel_data_2.append(round(sum(rot_data_2) / 4))
+    # print(channel, channel_data_1)
+    # print(channel, channel_data_2)        
+    
 
-print(channels.topk(10))
+# vf_1 = visualization.vector_field(venv_1, policy)
+# vf_2 = visualization.vector_field(venv_2, policy)
 
+# visualization.visualize_venv(venv_1)
+# visualization.visualize_venv(venv_2)
 # %%
 # TEST 1 - channels selected for this particular maze
 def get_mod_func(channels):
     def modify_relu3(x):
-        x[:, channels] *= 4
+        x[:, channels] *= 0
     return modify_relu3
 
-example_2_4_channels = [6, 7, 14, 17, 21, 30, 35, 43, 53, 71, 73, 80, 96, 101, 110, 112, 121, 123, 124]
+# example_2_4_channels = [6, 7, 14, 17, 21, 30, 35, 43, 53, 71, 73, 80, 96, 101, 110, 112, 121, 123, 124]
 
-mod_func = get_mod_func(example_2_4_channels)
-modified_policy = PolicyWithRelu3Mod(policy, mod_func)
+c = [121, 35, 73, 112, 71]
+# mod_func = get_mod_func(example_2_4_channels)
+modified_policy = PolicyWithRelu3Mod(policy, get_mod_func(c))
 
 # %%
 # vf_1_modified = visualization.vector_field(venv_1, modified_policy)
@@ -146,22 +96,30 @@ modified_policy = PolicyWithRelu3Mod(policy, mod_func)
 
 # %%
 
-for i in range(1000):
-    seed = get_seed_with_decision_square(13)
+cnt = 0
+for i in range(20):
+    seed = 23325461  # get_seed_with_decision_square(19)
     result_orig = rollout(policy, seed)
     result_modified = rollout(modified_policy, seed)
     msg = [i]
     if result_orig != result_modified:
         msg += [seed, result_orig, result_modified]
         if result_modified:
+            cnt += 1
             msg.append(":-)")
+        else:
+            cnt -= 1
     else:
         msg.append(result_orig)
+    msg.append(cnt)
     print(*msg)
 
 # %%
-    
-compare_policies(92769969, policy, modified_policy)
+venv_1, venv_2 = venvs[1]
+vf_1 = visualization.vector_field(venv_1, policy)
+vf_2 = visualization.vector_field(venv_1, modified_policy)
+visualization.plot_vfs(vf_1, vf_2)
+# compare_policies(745677, policy, modified_policy)
 
 
 # %%
