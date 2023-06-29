@@ -163,3 +163,40 @@ def maze_str_to_grid(maze_str):
         custom_maze_arr.append(line_arr)
         
     return np.array(custom_maze_arr)
+
+def get_seed_with_decision_square(size: int) -> int:
+    assert size % 2, "size must be an odd number"
+
+    while True:
+        seed = np.random.randint(100000000)
+        while maze.get_inner_grid_from_seed(seed=seed).shape[0] != size:
+            seed = np.random.randint(100000000)
+
+        venv = maze.create_venv(num=1, start_level=seed, num_levels=1)
+        state_bytes = venv.env.callmethod("get_state")[0]
+        
+        if maze.maze_has_decision_square(state_bytes):
+            return seed
+
+def rollout(policy, seed: int, num_steps: int = 256) -> bool:
+    venv = maze.create_venv(num = 1, start_level=seed, num_levels=1)
+    
+    obs = venv.reset()
+    for i in range(num_steps):
+        obs = t.tensor(obs, dtype=t.float32)
+        with t.no_grad():
+            categorical, value = policy(obs)
+        
+        action = categorical.sample().numpy()
+        # action = categorical.logits.argmax().unsqueeze(0).numpy()
+        obs, rewards, dones, infos = venv.step(action)
+        
+        if dones[0]:
+            return True
+    return False
+def compare_policies(seed, policy_1, policy_2):
+    venv_1 = maze.create_venv(1, seed, 1)
+    venv_2 = maze.create_venv(1, seed, 1)
+    vf_1 = visualization.vector_field(venv_1, policy_1)
+    vf_2 = visualization.vector_field(venv_2, policy_2)
+    visualization.plot_vfs(vf_1, vf_2)

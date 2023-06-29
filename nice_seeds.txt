@@ -1,2 +1,6 @@
 37982576 <-- seems to work better with "multiply by 5" and stupid channel selection
-46670244 <-- works well with mulyiply by 5
+46670244 <-- works well with multiplying by 5
+745677 <-- interesting effect when multiplying by 5
+
+INTERESTING CHANNELS
+21
