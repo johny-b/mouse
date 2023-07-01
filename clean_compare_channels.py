@@ -1,6 +1,7 @@
 # %%
 import numpy as np
 import torch as t
+from matplotlib import pyplot as plt
 
 from procgen_tools.imports import load_model
 from procgen_tools import visualization, maze
@@ -21,14 +22,10 @@ policy, hook = load_model()
 
 # %%
 venvs, labels = get_venvs('cheese')
-print(maze.state_from_venv(venvs[1][0]).inner_grid().shape)
 
-from matplotlib import pyplot as plt
-obs = venvs[0][0].reset()[0]
-plt.imshow(t.from_numpy(obs).permute(1,2,0))
 # %%
 
-example_ix = 4
+example_ix = 0
 print(labels[example_ix])
 visualization.visualize_venv(venvs[example_ix][0], render_padding=False)
 visualization.visualize_venv(venvs[example_ix][1], render_padding=False)
@@ -60,12 +57,22 @@ assert raw_data.shape == (venv_cnt, 2, 128, 8, 8)
 channel_sums = raw_data.sum((-1,-2))
 assert channel_sums.shape == (venv_cnt, 2, 128)
 
+ix = 0
+print(channel_sums[ix][0][121])
+print(channel_sums[ix][1][121])
+
+vf_1 = visualization.vector_field(venvs[ix][0], policy)
+visualization.plot_vf(vf_1)
+plt.show()
+vf_2 = visualization.vector_field(venvs[ix][1], policy)
+visualization.plot_vf(vf_2)
+
 # %%
 channel_diff = (channel_sums[:, 0] - channel_sums[:, 1]).abs()
 assert channel_diff.shape == (venv_cnt, 128)
 
 # %%
-channel = 121
+channel = 123
 for venv_data, label in zip(channel_sums, labels):
     print(channel, label, venv_data[:,channel].round().to(t.int).tolist())
 

@@ -6,6 +6,8 @@ random 25x25 mazes.
 Observations:
 *	If UP is not a legal move, sum of the channel is always low (<2)
 *	If channel has a high (~ > 8) sum, highest values always show mouse location
-*	If channel has a high sum, mouse always goes UP
-*	In all predefined examples, high sum happened when UP lead to cheese
-*	In random examples, high sum sometimes happens when UP leads to top right
+*	If:
+	* Channel has a high sum 
+	* We are not in top right 5x5
+	then mouse will go UP.
+	(Note: I'm not sure how important is the second condition)	
