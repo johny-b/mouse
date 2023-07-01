@@ -177,6 +177,11 @@ def get_seed_with_decision_square(size: int) -> int:
         
         if maze.maze_has_decision_square(state_bytes):
             return seed
+        
+def put_mouse_on_decision_square(state: maze.EnvState) -> None:
+    decision_square = maze.get_decision_square_from_maze_state(state)
+    padding = maze.get_padding(state.inner_grid())
+    state.set_mouse_pos(decision_square[0] + padding, decision_square[1] + padding)
 
 def rollout(policy, seed: int, num_steps: int = 256) -> bool:
     venv = maze.create_venv(num = 1, start_level=seed, num_levels=1)

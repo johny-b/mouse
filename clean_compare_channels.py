@@ -7,6 +7,8 @@ from procgen_tools import visualization, maze
 
 from custom_channels import get_venvs
 
+import tools
+
 from IPython import get_ipython
 ipython = get_ipython()
 ipython.run_line_magic("load_ext", "autoreload")
@@ -63,22 +65,30 @@ channel_diff = (channel_sums[:, 0] - channel_sums[:, 1]).abs()
 assert channel_diff.shape == (venv_cnt, 128)
 
 # %%
-channel = 21
+channel = 121
 for venv_data, label in zip(channel_sums, labels):
     print(channel, label, venv_data[:,channel].round().to(t.int).tolist())
 
 # %%
 #   TODO: fix plotting here
-def plot_channel(ax, channel):
-    from matplotlib import pyplot as plt
-    # plt.figure(figsize=(3.8,3.8))
-    
+def plot_channel(channel):
     c = channel.unsqueeze(2)
-    x = ax.imshow(c, vmin=0, vmax=8, alpha=0.00)
+    
+    from matplotlib import pyplot as plt
+    
+    # plt.figure(figsize=(3.8,3.8))
+    # x = ax.imshow(c, vmin=0, vmax=8, alpha=0.00)
+    # plt.colorbar(x)
+    # plt.axis('off')
+    # plt.show()
+    
+    plt.figure(figsize=(3.8, 3.8))
+    x = plt.imshow(c, vmin=0, vmax=8)
     plt.colorbar(x)
-    plt.axis('off')
     plt.show()
 
+
+# %%
 for example_ix in range(16):
     for version_ix in range(2):
         venv = venvs[example_ix][version_ix]
@@ -88,3 +98,21 @@ for example_ix in range(16):
         break
     break
 # %%
+
+seed = tools.get_seed_with_decision_square(25)
+# seed = 13890400
+print(seed)
+venv = maze.create_venv(1, seed, 1)
+state = maze.state_from_venv(venv)
+tools.put_mouse_on_decision_square(state)
+venv = maze.venv_from_grid(state.inner_grid())
+visualization.visualize_venv(venv)
+
+act = get_single_act(venv)
+print(act[121].sum())
+plot_channel(act[121])
+# %%
+
+venv = maze.create_venv(1, seed, 1)
+vf_1 = visualization.vector_field(venv, policy)
+visualization.plot_vf(vf_1)

@@ -1,22 +1,11 @@
-go right
-	73 
-	110 (lower effect)
-	96 (only when cheese in weird position)
-go left
-	38 (sort of left)
-	80 (eg on seed 47103015, but not on other seeds)
-"go to the cheese"
-	121
-	112
+CHANNEL 121
 
-??
-	17
-	123
+Obeservations: predefined environments in custom_channels.py and a few dozens
+random 25x25 mazes.
 
-"go up"
-	45 ("go to cheese" if cheese top right corner, "go up" otherwise)
-	98
-	10 (only with cheese in weird position)
-
-57131963
-2800840
+Observations:
+*	If UP is not a legal move, sum of the channel is always low (<2)
+*	If channel has a high (~ > 8) sum, highest values always show mouse location
+*	If channel has a high sum, mouse always goes UP
+*	In all predefined examples, high sum happened when UP lead to cheese
+*	In random examples, high sum sometimes happens when UP leads to top right
