@@ -239,3 +239,19 @@ x = rollout_video_clip(predict, 7, venv=venv)
 
 x[1].write_videofile('my_video.mp4')
 # %%
+# CHANNEL HISTOGRAM
+data = []
+for i in range(1000):
+    seed = tools.get_seed_with_decision_square(25)
+    state = maze.state_from_venv(maze.create_venv(1, seed, 1))
+    venv = maze.venv_from_grid(state.inner_grid())
+    with t.no_grad():
+        hook.run_with_input(venv.reset().astype('float32'))
+
+    act121 = hook.values_by_label['embedder.relu3_out'][0][121]
+    act121_sum = act121.sum().item()
+    data.append(act121_sum)
+    print(i, act121_sum)
+    
+plt.hist(data)
+# %%
