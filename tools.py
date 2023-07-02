@@ -4,7 +4,7 @@ from typing import Callable, Optional
 import numpy as np
 import torch as t
 
-from procgen_tools import maze, visualization
+from procgen_tools import maze, visualization, models
 
 # %%
 def get_seed(maze_size: int) -> int:
@@ -205,3 +205,20 @@ def compare_policies(seed, policy_1, policy_2):
     vf_1 = visualization.vector_field(venv_1, policy_1)
     vf_2 = visualization.vector_field(venv_2, policy_2)
     visualization.plot_vfs(vf_1, vf_2)
+
+def next_step_to_cheese(grid):
+    grid = np.array(grid)
+    graph = maze.maze_grid_to_graph(grid)
+    venv = maze.venv_from_grid(grid)
+    mr, mc = maze.state_from_venv(venv).mouse_pos
+    padding = maze.get_padding(grid)
+    mr_inner, mc_inner = mr - padding, mc - padding                 
+    path_to_cheese = maze.get_path_to_cheese(grid, graph, (mr_inner, mc_inner))
+    next_step_x, next_step_y = path_to_cheese[1]
+
+    next_step_x, next_step_y = next_step_x + padding, next_step_y + padding
+    
+    diff = (next_step_x - mr, next_step_y - mc)
+    action = next(key for key, val in models.MAZE_ACTION_DELTAS.items() if val == diff)
+    
+    return action
