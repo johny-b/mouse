@@ -226,3 +226,9 @@ def next_step_to_cheese(grid):
     action = next(key for key, val in models.MAZE_ACTION_DELTAS.items() if val == diff)
     
     return action
+
+def get_single_act(hook, venv, layer_name='embedder.relu3_out'):
+    with t.no_grad():
+        hook.run_with_input(venv.reset().astype('float32'))
+    
+    return hook.values_by_label[layer_name][0]

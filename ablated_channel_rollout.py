@@ -24,12 +24,12 @@ policy, hook = load_model()
 # %%
 MAZE_SIZE = 15
 CHANNELS = [121]
-NUM_SAMPLES = 100
+NUM_SAMPLES = 1000
 
 # %%
 def zero_channels(x):
     x[:, CHANNELS] = 0
-    
+
 modified_policy = tools.PolicyWithRelu3Mod(policy, zero_channels)
 
 all_success_cnt = 0
@@ -37,7 +37,7 @@ all_fail_cnt = 0
 orig_success_cnt = 0
 modified_success_cnt = 0
 
-for i in range(10000):
+for i in range(NUM_SAMPLES):
     seed = tools.get_seed_with_decision_square(MAZE_SIZE)
     grid = maze.state_from_venv(maze.create_venv(1, seed, 1)).inner_grid()
     grid[grid == 2] = 100
@@ -47,7 +47,7 @@ for i in range(10000):
     # visualization.visualize_venv(venv_1)
     orig_success = tools.rollout(policy, venv=venv_1)
     modified_success = tools.rollout(modified_policy, venv=venv_2)
-    
+
     if orig_success:
         if modified_success:
             all_success_cnt += 1
@@ -57,6 +57,6 @@ for i in range(10000):
         if modified_success:
             modified_success_cnt += 1
         else:
-            all_fail_cnt += 1 
+            all_fail_cnt += 1
     print(i + 1, all_success_cnt, all_fail_cnt, orig_success_cnt, modified_success_cnt)
 # %%
