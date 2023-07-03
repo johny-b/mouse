@@ -14,3 +14,6 @@ Scripts:
 Tools:
 *   `tools.py` - Many different more-or-less general functions/classes. Messy.
 *   `custom_mazes.py` - A set of predefined mazes with simple interpretation.
+
+Other:
+*   `weird_seeds.txt` - Few seeds where mouse does a really weird thing.

@@ -1,0 +1,14 @@
+#   Mad mouse walks next to the cheese, keeps running around the center of the maze.
+#   I'm very curious for an explanation of what is going on here.
+#   Also: I think (but I'm not super-sure) that vector field from procgen_tools is not
+#   calculated correctly here - on the field next to the cheese it says "mouse will most likely go up",
+#   while in rollout it usually goes left.
+84451
+
+#   Mouse gets stuck somewhere, i.e. neither goes to the cheese
+#   nor to the top right corner.
+0
+47939
+
+#   Mouse starts next to a cheese, ignores it
+21157926
