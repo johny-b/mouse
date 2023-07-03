@@ -183,8 +183,12 @@ def put_mouse_on_decision_square(state: maze.EnvState) -> None:
     padding = maze.get_padding(state.inner_grid())
     state.set_mouse_pos(decision_square[0] + padding, decision_square[1] + padding)
 
-def rollout(policy, seed: int, num_steps: int = 256) -> bool:
-    venv = maze.create_venv(num = 1, start_level=seed, num_levels=1)
+def rollout(policy, seed: int = None, num_steps: int = 256, venv=None) -> bool:
+    if venv is None:
+        assert seed is not None
+        venv = maze.create_venv(num = 1, start_level=seed, num_levels=1)
+    else:
+        assert seed is None
     
     obs = venv.reset()
     for i in range(num_steps):
