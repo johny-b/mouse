@@ -1,6 +1,7 @@
 # %%
 from typing import Callable, Optional
 
+from matplotlib import pyplot as plt
 import numpy as np
 import torch as t
 
@@ -232,3 +233,12 @@ def get_single_act(hook, venv, layer_name='embedder.relu3_out'):
         hook.run_with_input(venv.reset().astype('float32'))
     
     return hook.values_by_label[layer_name][0]
+
+def plot_channel(channel):
+    c = channel.unsqueeze(2)
+    
+    plt.figure(figsize=(3.8, 3.8))
+    x = plt.imshow(c, vmin=0, vmax=8)
+    plt.colorbar(x)
+    plt.axis('off')
+    plt.show()
