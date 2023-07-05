@@ -6,7 +6,9 @@ from typing import Tuple
 import pickle
 import torch as t
 from matplotlib import pyplot as plt
-
+import seaborn as sns
+from tqdm import tqdm
+    
 from procgen_tools.imports import load_model
 from procgen_tools import visualization, maze, models
 
@@ -74,53 +76,83 @@ class MazeData:
     step_to_corner: str
     dist: float
 
-def get_maze_data(size, cnt, in_distribution, channel=121, min_sum=30):
-    """Return a list of length cnt of MazeData for mazes:
+def get_maze_data(size, cnt, in_distribution, channel, min_sum=30):
+    """Return cnt MazeData with mazes:
         *   Created with `get_maze` function (so with properties described there)
         *   That have the sum of the given channel at least min_sum
             (sum of the channel is calculated using global policy variable)
     """
     data = []
-    while len(data) < cnt:
-        seed, venv = get_maze(size, in_distribution)
-        
-        with t.no_grad():
-            categorical, _ = hook.run_with_input(venv.reset().astype('float32'))
+    with tqdm(total=cnt) as pbar:
+        while len(data) < cnt:
+            seed, venv = get_maze(size, in_distribution)
+            
+            with t.no_grad():
+                categorical, _ = hook.run_with_input(venv.reset().astype('float32'))
 
-        act121 = hook.values_by_label['embedder.relu3_out'][0][channel]
-        act121_sum = act121.sum().item()
-        
-        if act121_sum < min_sum:
-            continue
-        
-        grid = maze.state_from_venv(venv).inner_grid()
-        step_to_cheese = tools.next_step_to_cheese(grid)
-        step_to_corner = tools.next_step_to_corner(grid)
-        mouse_step = models.human_readable_action(categorical.logits.argmax())
-        
-        cheese_pos = next(zip(*np.where(grid == 2)))
-        top_right = (size - 1, size - 1)
-        
-        dist = np.sqrt((cheese_pos[0] - top_right[0]) ** 2 + (cheese_pos[1] - top_right[1]) ** 2)
-        data.append(MazeData(seed, cheese_pos, mouse_step, step_to_cheese, step_to_corner, dist))
+            act = hook.values_by_label['embedder.relu3_out'][0][channel]
+            act_sum = act.sum().item()
+            
+            if act_sum < min_sum:
+                continue
+            
+            grid = maze.state_from_venv(venv).inner_grid()
+            step_to_cheese = tools.next_step_to_cheese(grid)
+            step_to_corner = tools.next_step_to_corner(grid)
+            mouse_step = models.human_readable_action(categorical.logits.argmax())
+            
+            cheese_pos = next(zip(*np.where(grid == 2)))
+            top_right = (size - 1, size - 1)
+            dist = np.sqrt((cheese_pos[0] - top_right[0]) ** 2 + (cheese_pos[1] - top_right[1]) ** 2)
+            
+            data.append(MazeData(seed, cheese_pos, mouse_step, step_to_cheese, step_to_corner, dist))
 
-        if not len(data) % 10:
-            print(in_distribution, len(data))
+            pbar.update(1)
     return data
 
 # %%
 #   Create in distribution data and backup it
 MAZE_SIZE = 25
 NUM_MAZES = 100
+CHANNEL = 73
 
-in_distr_data = get_maze_data(MAZE_SIZE, NUM_MAZES, True)
-with open(f"in_distr_mazes_{MAZE_SIZE}_{NUM_MAZES}.pickle", 'wb') as handle:
+in_distr_data = get_maze_data(MAZE_SIZE, NUM_MAZES, True, CHANNEL)
+with open(f"in_distr_mazes_{MAZE_SIZE}_{NUM_MAZES}_{CHANNEL}.pickle", 'wb') as handle:
     pickle.dump(in_distr_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 # %%
 #   Create out of distribution data and backup it
-oo_distr_data = get_maze_data(MAZE_SIZE, NUM_MAZES, False)
-with open(f"oo_distr_mazes_{MAZE_SIZE}_{NUM_MAZES}.pickle", 'wb') as handle:
+oo_distr_data = get_maze_data(MAZE_SIZE, NUM_MAZES, False, CHANNEL)
+with open(f"oo_distr_mazes_{MAZE_SIZE}_{NUM_MAZES}_{CHANNEL}.pickle", 'wb') as handle:
     pickle.dump(in_distr_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
+# %%
+def get_crosstable(data: list[MazeData], dir_):
+    cheese_in_dir = [x for x in data if x.mouse_step == x.step_to_cheese == dir_]
+    top_right_in_dir = [x for x in data if x.mouse_step == x.step_to_corner == dir_]
+    cheese_no_in_dir = [x for x in data if x.mouse_step != dir_ and x.step_to_cheese == dir_]
+    top_right_no_in_dir = [x for x in data if x.mouse_step != dir_ and x.step_to_corner == dir_]
+    
+    return [[len(cheese_in_dir), len(top_right_in_dir)], [len(cheese_no_in_dir), len(top_right_no_in_dir)]]
 
+print(get_crosstable(in_distr_data, 'RIGHT'))
+print(get_crosstable(oo_distr_data, 'RIGHT'))
+
+# %%
+
+print(sorted(x.dist for x in oo_distr_data))
+print(sorted(x.dist for x in in_distr_data))
+
+# %%
+plot_data = oo_distr_data.copy()
+
+
+in_distr_oo_distr_ratio = 25 / (MAZE_SIZE ** 2)
+plot_data += [x for x in in_distr_data if np.random.random() < in_distr_oo_distr_ratio]
+
+x = [x.dist for x in plot_data]
+y = ["Mouse goes to the cheese" if x.mouse_step == x.step_to_cheese else "Mouse goes to the top right" for x in plot_data]
+plot = sns.stripplot(x=x, y=y)
+plot.set_title(f"Mouse action at the decision point, sum(channel_{CHANNEL}) > 30")
+plot.set_xlabel("Euclidean distance between the cheese and the top right corner")
 # %%

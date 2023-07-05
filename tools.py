@@ -228,6 +228,23 @@ def next_step_to_cheese(grid):
     
     return action
 
+def next_step_to_corner(grid):
+    grid = np.array(grid)
+    graph = maze.maze_grid_to_graph(grid)
+    venv = maze.venv_from_grid(grid)
+    mr, mc = maze.state_from_venv(venv).mouse_pos
+    padding = maze.get_padding(grid)
+    mr_inner, mc_inner = mr - padding, mc - padding                 
+    path_to_corner = maze.get_path_to_corner(grid, graph, (mr_inner, mc_inner))
+    next_step_x, next_step_y = path_to_corner[1]
+
+    next_step_x, next_step_y = next_step_x + padding, next_step_y + padding
+    
+    diff = (next_step_x - mr, next_step_y - mc)
+    action = next(key for key, val in models.MAZE_ACTION_DELTAS.items() if val == diff)
+    
+    return action
+
 def get_single_act(hook, venv, layer_name='embedder.relu3_out'):
     with t.no_grad():
         hook.run_with_input(venv.reset().astype('float32'))
