@@ -1,5 +1,7 @@
 # Mouse-in-the-maze experiments
 
+Code I have written when working on the [post about how goal misgeneralization happens](https://www.lesswrong.com/posts/vY9oE39tBupZLAyoC/localizing-goal-misgeneralization-in-a-maze-solving-policy).
+
 ## Installation
 
 ```
