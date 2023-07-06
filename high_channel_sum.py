@@ -47,9 +47,9 @@ def get_maze(size, in_distribution):
         if in_distribution is None:
             available_cheese_positions = corridors
         elif in_distribution:
-            available_cheese_positions =  [square for square in corridors if square[0] >= min_in_distr_coord and square[1] >= min_in_distr_coord]
+            available_cheese_positions = [square for square in corridors if square[0] >= min_in_distr_coord and square[1] >= min_in_distr_coord]
         else:
-            available_cheese_positions = [square for square in corridors if square[0] <  min_in_distr_coord and square[1] <  min_in_distr_coord]
+            available_cheese_positions = [square for square in corridors if square[0] <  min_in_distr_coord or  square[1] <  min_in_distr_coord]
 
         cheese_position = random.choice(available_cheese_positions)
         grid[cheese_position] = 2
