@@ -42,8 +42,8 @@ def get_venv_pair(size, dir_):
     
     #   Set cheese in a random position
     min_in_distr_coord = size - 5
-    available_cheese_positions_in =  [square for square in corridors if square[0] >= min_in_distr_coord and square[1] >= min_in_distr_coord]
-    available_cheese_positions_oo = [square for square in corridors if square[0] <  min_in_distr_coord and square[1] <  min_in_distr_coord]
+    available_cheese_positions_in = [square for square in corridors if square[0] >= min_in_distr_coord and square[1] >= min_in_distr_coord]
+    available_cheese_positions_oo = [square for square in corridors if square[0] <  min_in_distr_coord or  square[1] <  min_in_distr_coord]
     
     cheese_position_in = random.choice(available_cheese_positions_in)
     cheese_position_oo = random.choice(available_cheese_positions_oo)
@@ -60,19 +60,13 @@ def get_venv_pair(size, dir_):
     return seed, venv_in, venv_oo, cheese_in_dir_in, cheese_in_dir_oo
 
 # %%
-seed, v1, v2, cheese_in_dir_in, cheese_in_dir_oo = get_venv_pair(25, 'right')
-visualization.visualize_venv(v1)
-visualization.visualize_venv(v2)
-print(cheese_in_dir_in, cheese_in_dir_oo)
-
-# %%
 # Easy to spot differences, e.g.:
 #   121, "up"
 #   17,  "down"
 #   73,  "right"
-CNT = 200
-CHANNEL = 73
-DIR = 'right'
+CNT = 100
+CHANNEL = 121
+DIR = 'up'
 
 data = []
 for i in tqdm(range(CNT)):        
