@@ -8,6 +8,7 @@ Code I have written when working on the [post about how goal misgeneralization h
 git clone https://github.com/johny-b/mouse-goal-misgeneralization.git
 cd mouse-goal-misgeneralization
 pip3 install -r requirements.txt
+python3 -c "from procgen_tools.utils import setup; setup()"
 ```
 
 Developed on python 3.10.6, 3.8 should also work.
