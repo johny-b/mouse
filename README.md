@@ -2,6 +2,14 @@
 
 ## Installation
 
+```
+git clone https://github.com/johny-b/mouse-goal-misgeneralization.git
+cd mouse-goal-misgeneralization
+pip3 install -r requirements.txt
+```
+
+Developed on python 3.10.6, 3.8 should also work.
+
 ## Code
 
 Scripts:
