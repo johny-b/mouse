@@ -1,0 +1,5 @@
+#   Procgen tools (and all the heavy requirements like torch)
+git+https://github.com/ulissemini/procgen-tools.git@a6302f4
+
+#   Plots
+seaborn==0.12.2
