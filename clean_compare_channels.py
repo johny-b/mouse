@@ -62,8 +62,11 @@ channel_diff_sum = channel_diff.mean(dim=0)
 # Channels: [121,  21,  80,  35, 112,  73,  71,   7, 123,  17, 110,  66,  30,  98, 96, 101]
 top_channels = channel_diff_sum.topk(16)
 print(top_channels)
+
 # %%
-# What would happen if I set top
+# What happens when we set top channels to 0?
+# NOTE: this doesn't make that much sense - some of the channels never have
+#       values around 0, we should probably set them to some reasonable minimum/mean instead.
 def zero_channels(x):
     x[:, top_channels.indices] = 0
 
@@ -75,5 +78,3 @@ venv = get_venvs("cheese")[0][14][1]
 vf_1 = visualization.vector_field(venv, policy)
 vf_2 = visualization.vector_field(venv, modified_policy)
 visualization.plot_vfs(vf_1, vf_2)
-
-# %%

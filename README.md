@@ -5,15 +5,16 @@
 ## Code
 
 Scripts:
-* `channel_sum_histogram.py` - Compare channel sum between on distribution and out of distribution data. 
-   Hardcoded values for channel `121` in layer `relu3`, split into "is cheese UP?" groups.
-* `ablated_channel_rollout.py` - Compare rolouts for original policy and a policy with some channels zeroed.
-* `compare_decision_square.py` - [TODO]
-* `find_cheese_dir_components.py` - Find parts of the network corresponding to "this way to cheese" feature
+
+1. `browse_channels.py` - Compare sums of activations of a channel in a simple maze
+2. `channel_sum.py` - Plot the relationship between channel sum and direction of the cheese in a set of random mazes
+3. `high_channel_sum.py` - Analyze behaviour of the mouse when sum of a given channel is high
+4. `ablated_channel_rollout.py` - Compare rollouts between original and modified policy
+5. `find_channels.py` - A simple detector of important channels
 
 Tools:
 *   `tools.py` - Many different more-or-less general functions/classes. Messy.
-*   `custom_mazes.py` - A set of predefined mazes with simple interpretation.
+*   `custom_mazes.py` - A set of simple predefined mazes. Messy.
 
 Other:
 *   `weird_seeds.txt` - Few seeds where mouse does a really weird thing.
