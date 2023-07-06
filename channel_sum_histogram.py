@@ -64,7 +64,7 @@ def get_venv_pair(size, dir_):
 #   121, "up"
 #   17,  "down"
 #   73,  "right"
-CNT = 100
+CNT = 1000
 CHANNEL = 121
 DIR = 'up'
 
@@ -81,7 +81,14 @@ for i in tqdm(range(CNT)):
 y = [x[1] for x in data]
 x = ["In distribution" if x[0] else "Out of distribution" for x in data]
 hue = [f"Cheese is {DIR}" if x[2] else f"Cheese is not {DIR}" for x in data]
-plot = sns.stripplot(y = y, x=x, hue=hue, dodge=True, alpha=0.2)
+plot = sns.stripplot(
+    y=y, 
+    x=x, 
+    hue=hue, 
+    dodge=True, 
+    alpha=0.2,
+    order = ["In distribution", "Out of distribution"]
+)
 plot.set_title(f'Sum of channel {CHANNEL} vs "is the cheese {DIR}"')
 plot.set_ylabel(f'Sum of channel {CHANNEL}')
 # %%

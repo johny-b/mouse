@@ -1,9 +1,4 @@
 # %%
-import numpy as np
-import pickle
-import torch as t
-from matplotlib import pyplot as plt
-
 from procgen_tools.imports import load_model
 from procgen_tools import visualization, maze, models
 
@@ -25,7 +20,7 @@ policy, hook = load_model()
 custom_venvs, labels = get_venvs('cheese')
 
 # %%
-CHANNEL = 17
+CHANNEL = 73
 
 example_ix = 0  # (0-4)
 for rot in range(4):
@@ -52,11 +47,13 @@ for rot in range(4):
 # %%
 # IMPORTANT CHANNELS
 #   121 - UP
-#    21 - Hard to interpret. LEFT >> UP, DOWN >> RIGHT. 
+#    21 - DOWN or LEFT
+#    80 - LEFT but maybe also DOWN
 #    35 - UP or LEFT
+#   112 - LEFT, maybe UP/DOWN, not RIGHT
 #    73 - RIGHT
-#    17 - DOWN
-#     7 - Hard to interpret. RIGHT/UP >> LEFT/DOWN
-#   112 - LEFT
 #    71 - UP
+#     7 - UP or RIGHT
 #   123 - DOWN
+#    17 - DOWN
+# %%

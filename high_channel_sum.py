@@ -113,8 +113,8 @@ def get_maze_data(size, cnt, in_distribution, channel, min_sum=30):
 # %%
 #   Create in distribution data and backup it
 MAZE_SIZE = 25
-NUM_MAZES = 100
-CHANNEL = 73
+NUM_MAZES = 1000
+CHANNEL = 121
 
 in_distr_data = get_maze_data(MAZE_SIZE, NUM_MAZES, True, CHANNEL)
 with open(f"in_distr_mazes_{MAZE_SIZE}_{NUM_MAZES}_{CHANNEL}.pickle", 'wb') as handle:
@@ -135,17 +135,11 @@ def get_crosstable(data: list[MazeData], dir_):
     
     return [[len(cheese_in_dir), len(top_right_in_dir)], [len(cheese_no_in_dir), len(top_right_no_in_dir)]]
 
-print(get_crosstable(in_distr_data, 'RIGHT'))
-print(get_crosstable(oo_distr_data, 'RIGHT'))
-
-# %%
-
-print(sorted(x.dist for x in oo_distr_data))
-print(sorted(x.dist for x in in_distr_data))
+print(get_crosstable(in_distr_data, 'UP'))
+print(get_crosstable(oo_distr_data, 'UP'))
 
 # %%
 plot_data = oo_distr_data.copy()
-
 
 in_distr_oo_distr_ratio = 25 / (MAZE_SIZE ** 2)
 plot_data += [x for x in in_distr_data if np.random.random() < in_distr_oo_distr_ratio]
